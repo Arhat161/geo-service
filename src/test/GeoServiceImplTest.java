@@ -1,5 +1,6 @@
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import ru.netology.entity.Country;
 import ru.netology.entity.Location;
@@ -12,10 +13,11 @@ import static ru.netology.geo.GeoServiceImpl.*;
 
 public class GeoServiceImplTest {
 
-    GeoService geoService = Mockito.mock(GeoServiceImpl.class);
+    static GeoService geoService;
 
-    @Test
-    public void byIpTest() {
+    @BeforeAll
+    public static void initSuite() {
+        geoService = Mockito.mock(GeoServiceImpl.class);
 
         Mockito.when(geoService.byIp(LOCALHOST)).thenReturn(new Location(null, null, null, 0));
         Mockito.when(geoService.byIp(MOSCOW_IP)).thenReturn(new Location("Moscow", RUSSIA, "Lenina", 15));
@@ -23,19 +25,39 @@ public class GeoServiceImplTest {
         Mockito.when(geoService.byIp(Mockito.startsWith("172."))).thenReturn(new Location("Moscow", Country.RUSSIA, null, 0));
         Mockito.when(geoService.byIp(Mockito.startsWith("96."))).thenReturn(new Location("New York", Country.USA, null, 0));
 
-        Assertions.assertNull(geoService.byIp("127.0.0.1").getCountry());
-        Assertions.assertEquals(RUSSIA, geoService.byIp("172.0.32.11").getCountry());
-        Assertions.assertEquals(USA, geoService.byIp("96.44.183.149").getCountry());
-        Assertions.assertEquals(RUSSIA, geoService.byIp("172.123.12.19").getCountry());
+        Mockito.when(geoService.byCoordinates(Mockito.anyDouble(), Mockito.anyDouble())).thenThrow(new RuntimeException("Not implemented"));
 
+        System.out.println("Start tests for methods of class 'GeoServiceImpl' ....");
     }
 
     @Test
-    public void byCoordinatesTest() {
+    @DisplayName("Test byIp() for localhost")
+    public void byIpLocalhostTest(TestInfo byIpLocalhostTestInfo) {
+        Assertions.assertNull(geoService.byIp("127.0.0.1").getCountry(), byIpLocalhostTestInfo.getDisplayName() + " is NO complete!");
+        System.out.println(byIpLocalhostTestInfo.getDisplayName() + " complete!");
+    }
 
-        Mockito.when(geoService.byCoordinates(Mockito.anyDouble(), Mockito.anyDouble())).thenThrow(new RuntimeException("Not implemented"));
+    @ParameterizedTest
+    @DisplayName("Test byIp() for russian IP ")
+    @ValueSource(strings = {"172.0.32.11", "172.123.12.19"})
+    public void byIpRussiaTest(String ip) {
+        Assertions.assertEquals(RUSSIA, geoService.byIp(ip).getCountry());
+        System.out.println("Test byIp(" + ip + ") complete!");
+    }
 
-        Assertions.assertThrows(RuntimeException.class, () -> geoService.byCoordinates(124.56, 45.78));
+    @ParameterizedTest
+    @DisplayName("Test byIp() for USA IP ")
+    @ValueSource(strings = {"96.44.183.149", "96.25.145.201"})
+    public void byIpUsaTest(String ip) {
+        Assertions.assertEquals(USA, geoService.byIp(ip).getCountry());
+        System.out.println("Test byIp(" + ip + ") complete!");
+    }
 
+    @Test
+    @DisplayName("Test byCoordinatesTest()")
+    public void byCoordinatesTest(TestInfo byCoordinatesTestInfo) {
+        Assertions.assertThrows(RuntimeException.class, () -> geoService.byCoordinates(124.56, 45.78),
+                byCoordinatesTestInfo.getDisplayName() + " is NO complete!");
+        System.out.println(byCoordinatesTestInfo.getDisplayName() + " complete!");
     }
 }
