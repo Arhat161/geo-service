@@ -30,6 +30,11 @@ public class GeoServiceImplTest {
         System.out.println("Start tests for methods of class 'GeoServiceImpl' ....");
     }
 
+    @AfterAll
+    public static void completeSuite() {
+        System.out.println("All tests for methods of class 'GeoServiceImpl' complete!");
+    }
+
     @Test
     @DisplayName("Test byIp() for localhost")
     public void byIpLocalhostTest(TestInfo byIpLocalhostTestInfo) {
